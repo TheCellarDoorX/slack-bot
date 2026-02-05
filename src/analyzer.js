@@ -58,15 +58,23 @@ Important:
 
       // Parse JSON response (handle markdown code blocks)
       let jsonString = responseText.trim();
-      if (jsonString.startsWith('```json')) {
-        jsonString = jsonString.slice(7); // Remove ```json
-      } else if (jsonString.startsWith('```')) {
-        jsonString = jsonString.slice(3); // Remove ```
+
+      // Try to extract JSON from markdown code blocks
+      const jsonMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonString = jsonMatch[1].trim();
+      } else {
+        // If no code block, try to find JSON object directly
+        const objectMatch = jsonString.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          jsonString = objectMatch[0];
+        }
       }
-      if (jsonString.endsWith('```')) {
-        jsonString = jsonString.slice(0, -3); // Remove trailing ```
-      }
+
       jsonString = jsonString.trim();
+
+      // Remove any trailing commas that might break JSON parsing
+      jsonString = jsonString.replace(/,\s*([}\]])/g, '$1');
 
       const feedback = JSON.parse(jsonString);
 
